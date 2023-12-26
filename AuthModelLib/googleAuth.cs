@@ -3,14 +3,10 @@ using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Services;
 using Google.Apis.Util;
-using Microsoft.Graph.Models;
-using Newtonsoft.Json;
-using System;
 using System.Data;
 using System.Net.Mail;
 using System.Net;
-using System.Text.Json;
-using System.Threading;
+
 
 namespace AuthModelLib 
 {
@@ -18,6 +14,8 @@ namespace AuthModelLib
     {     
         const string clientId = "532374526064-70e174f85sid96ttojf20k06fjf3kp0s.apps.googleusercontent.com";
         const string secret = "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";
+
+        const string googleAppPassword = "rxmu purd pybx rvus";
 
         //our app password for your device = rxmu purd pybx rvus
         private UserCredential _credentials { get; set; }
@@ -84,7 +82,7 @@ namespace AuthModelLib
 
                 var jsonResponse = System.Text.Json.JsonSerializer.Serialize<Google.Apis.Gmail.v1.Data.Profile>(profile);
 
-                var dtResult = Helper.Tabulate(jsonResponse);
+                var dtResult = genericHelper.Tabulate(jsonResponse);
 
                 if (dtResult != null) return dtResult;
 
@@ -116,8 +114,8 @@ namespace AuthModelLib
         /************************************************************************************************************************\
          *                                                                                                                      *
         \************************************************************************************************************************/
-
-        public async Task<string> SendEmail(string adresantEmail, string subject, string body)
+        //1PtOYJMzEI
+        public async Task<string> SendEmail(string adresantEmail, string adresantName, string subject, string body)
         {
             try
             {      
@@ -128,10 +126,10 @@ namespace AuthModelLib
                     client.DeliveryMethod = SmtpDeliveryMethod.Network;
                     client.UseDefaultCredentials = false;
                     client.EnableSsl = true;
-                    client.Credentials = new NetworkCredential("tugit@fity.ca", "rxmu purd pybx rvus");
+                    client.Credentials = new NetworkCredential("tugit@fity.ca", googleAppPassword);
                     using (var message = new MailMessage(
                         from: new MailAddress("tugit@fity.ca", "Gordon"),
-                        to: new MailAddress(adresantEmail, "Daniil")
+                        to: new MailAddress(adresantEmail, adresantName)
                         ))
                     {
 
@@ -190,42 +188,15 @@ namespace AuthModelLib
          *                                                                                                                      *
         \************************************************************************************************************************/
 
-        //public DataTable convertJSONtoDataTable (string strJson)
-        //{
-        //    DataTable? dataTable = new DataTable("DTDT");
-        //    dataTable.Columns.Add("ETag");
-        //    dataTable.Columns.Add("EmailAddress");
-        //    dataTable.Columns.Add("HistoryId");
-        //    dataTable.Columns.Add("MessagesTotal");
-        //    dataTable.Columns.Add("ThreadsTotal");
-
-        //    try
-        //    {
-        //        if (string.IsNullOrWhiteSpace(strJson))
-        //        {
-        //            Console.WriteLine("%%%%%%%%%%%%%%%%");
-        //            return dataTable;
-        //        }
-
-        //        //dataTable = JsonConvert.DeserializeObject<DataTable>(strJson);
-                
-
-        //        //DataTable dataTable = (DataTable)JsonConvert.DeserializeObject(strJson, (typeof(DataTable)));
-                
-
-        //        var dataSet = JsonConvert.DeserializeObject<DataSet>(strJson);
-        //        dataTable = dataSet.Tables[0];
+        public void MapsEmbed()
+        {
+            //<iframe tag for HTML. Should be written in <body/>
+            string MapsEmbed =
+                "<iframe  width = '600'  height='450'  style=border:0  loading=lazy  allowfullscreen  referrerpolicy = no-referrer-when-downgrade  src=https://www.google.com/maps/embed/v1/place?key=API_KEY &q=Space+Needle,Seattle+WA></iframe>";
 
 
-        //        return dataTable;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        string exceptionMessage = "googleAuth->convertJSONtoDataTable(): [" + ex.Message + "]";
-        //        Console.WriteLine(exceptionMessage);
-        //        return dataTable;
-        //    }            
-        //}
+
+        }
 
         /************************************************************************************************************************\
          *                                                                                                                      *
@@ -239,6 +210,8 @@ namespace AuthModelLib
         /************************************************************************************************************************\
          *                                                                                                                      *
         \************************************************************************************************************************/
+
+        
 
     }
 }

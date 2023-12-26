@@ -10,7 +10,7 @@ namespace AuthModelLib
 
             Task<string> SendSMS(string receiverNumber, string message);
 
-            Task<string> SendEmail(string adresantEmail, string subject, string body);
+            Task<string> SendEmail(string adresantEmail, string adresantName, string subject, string body);
 
         }
     

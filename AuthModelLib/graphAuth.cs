@@ -1,11 +1,7 @@
-﻿
-using Microsoft.Graph;
+﻿using Microsoft.Graph;
 using Azure.Identity;
-using Google.Apis.Auth.OAuth2;
 using System.Data;
-using Google.Apis.Gmail.v1.Data;
-using Microsoft.Graph.Education.Classes.Item.Assignments.Item.Submissions.Item.Return;
-using System.Management;
+
 
 //https://stackoverflow.com/questions/75604903/delegateauthenticationprovider-not-found-after-updating-microsoft-graph
 //https://github.com/microsoftgraph/msgraph-sdk-dotnet/blob/feature/5.0/docs/upgrade-to-v5.md#authentication
@@ -102,7 +98,7 @@ public class graphAuth : iGAuth
     *                                                                                                                      *
     \************************************************************************************************************************/
 
-    public async Task<string> SendEmail(string adresantEmail, string subject, string body)
+    public async Task<string> SendEmail(string adresantEmail, string adresantName, string subject, string body)
     {
         return "This functionality is not implemented in GraphAuth class";
     }

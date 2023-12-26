@@ -1,6 +1,4 @@
-﻿using Azure;
-using Google.Apis.Gmail.v1.Data;
-using RingCentral;
+﻿using RingCentral;
 using System.Data;
 
 namespace AuthModelLib
@@ -35,8 +33,6 @@ namespace AuthModelLib
                 Console.WriteLine("RingCentralAuth->AuthLogin() : OK");
                 return "OK";
 
-                //RestClient rc = new RestClient(clientId, secret, false);
-                //await rc.Authorize(jwt);
             }
             catch (Exception ex)
             {
@@ -52,7 +48,6 @@ namespace AuthModelLib
 
         public async Task<string> SendSMS(string receiverNumber, string message)
         {
-
             try
             {
                 var parameters = new CreateSMSMessage();
@@ -84,7 +79,7 @@ namespace AuthModelLib
          *                                                                                                                      *
         \************************************************************************************************************************/
 
-        public async Task<string> SendEmail(string adresantEmail, string subject, string body)
+        public async Task<string> SendEmail(string adresantEmail, string adresantName, string subject, string body)
         {
             return "This functionality is not implemented in RingCentral class";
         }
