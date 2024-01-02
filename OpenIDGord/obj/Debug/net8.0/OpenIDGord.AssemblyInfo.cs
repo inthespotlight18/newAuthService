@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OpenIDGord")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3023bece87fa1519170ae016f602739fa7e36066")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+693dfd24409ea67b4f663352cfa01fea7524e413")]
 [assembly: System.Reflection.AssemblyProductAttribute("OpenIDGord")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OpenIDGord")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

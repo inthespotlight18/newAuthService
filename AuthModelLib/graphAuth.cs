@@ -34,7 +34,7 @@ public class graphAuth : iGAuth
             };
             csc = new ClientSecretCredential(tenantId, clientId, secret, options);
 
-            Console.WriteLine("RingCentralAuth->AuthLogin(): OK");
+            Console.WriteLine("garminAuth->AuthLogin(): OK");
             return "OK";
         } 
         catch (Exception ex)

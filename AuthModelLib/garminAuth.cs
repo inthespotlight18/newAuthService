@@ -1,4 +1,12 @@
-﻿//using System.Data;
+﻿using Azure;
+using Microsoft.Graph;
+using System.Data;
+using System.Net.Http;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Text;
+using System.Web;
+using static Microsoft.Graph.Constants;
 //using System.Diagnostics;
 //using System.Net;
 //using System.Net.Http.Headers;
@@ -9,163 +17,284 @@
 
 
 
-//namespace AuthModelLib
-//{
-//    public class GarminOAuth1a
-//    {
-//        private const string ConsumerKey = "920a113f-b24b-4681-a3c2-fe16d940cb12";
-//        private const string ConsumerSecret = "VO4vvLXTmq4a6SCghWAMcwGYEwMY9dPvAp7";
+namespace AuthModelLib
+{
+    public class garminAuth : iGAuth
+    {
+        private const string ConsumerKey = "920a113f-b24b-4681-a3c2-fe16d940cb12";
+        private const string ConsumerSecret = "VO4vvLXTmq4a6SCghWAMcwGYEwMY9dPvAp7";
+        private const string SignatureMethod = "HMAC-SHA1";
+        private const string oauth_version = "1.0";
+
+        static string oauth_verifier = "";
+        static string oauth_token = "";
+        static string oauth_token_secret = "";
+        static string oauth_access_token = "";
 
 
+        private const string accessTokenUrl = "https://connectapi.garmin.com/oauth-service/oauth/access_token";
 
-//        static HttpClient client = new HttpClient();
-
-//        static RestClient _client;
-
-//        //#1 step = https://connectapi.garmin.com/oauth-service/oauth/request_token  GET
-//        //#2 step = https://connectapi.garmin.com/oauthConfirm  GET
-//        //#3 step = https://connectapi.garmin.com/oauth-service/oauth/access_token
+        //#1 step = https://connectapi.garmin.com/oauth-service/oauth/request_token  GET
+        //#2 step = https://connectapi.garmin.com/oauthConfirm  has to be done by user
+        //#3 step = https://connectapi.garmin.com/oauth-service/oauth/access_token
 
 
+        public async Task<string> AuthLogin()
+        {
+            string requestUrl = "https://connectapi.garmin.com/oauth-service/oauth/request_token";
+
+            var oauthParameters = new Dictionary<string, string>();
+
+            var signatureBaseString = GenerateSignatureBaseString(requestUrl, "POST", oauthParameters);
+            var oauthSignature = GenerateOAuthSignature(signatureBaseString);
+
+            oauthParameters.Add("oauth_signature", Uri.EscapeDataString(oauthSignature));
+
+            var authorizationHeader = $"OAuth {string.Join(", ", oauthParameters.Select(p => $"{p.Key}=\"{p.Value}\""))}";
+
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.Add("Authorization", authorizationHeader);
+
+                // Send the request to acquire the request token
+                var response = await httpClient.PostAsync(requestUrl, null);
 
 
-//        //oauth_token=c6057f88-13d3-47fd-a4ee-60d882513f24
-//        //oauth_token_secret= BxbA0vDYHTvQvaYbWlaikc21WEW4m4wy5vr
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Response: {responseContent}");
 
-//        // static RestClient? client;
+                    var tokenDictionary = ParseOAuthResponse(responseContent);
 
-//        //public (string token, string tokenSecret) GetUnauthorizedRequestToken(RestClientOptions client)
-//        //{
-//        //    Console.WriteLine("Acquiring Unauthorized Request Token and Token Secret...");
+                    // Retrieve values from the dictionary
+                    if (tokenDictionary.TryGetValue("oauth_token", out string oauthToken))
+                        oauth_token = oauthToken; //request_token
 
-//        //    
+                    if (tokenDictionary.TryGetValue("oauth_token_secret", out string oauthTokenSecret))                   
+                        oauth_token_secret = oauthTokenSecret;
 
-//        //    var request = new RestRequest("oauth/request_token");
-//        //    var response = client.Execute(request);
+                   /************************************************************************************************************************\
+                    *  Step #2 - Verifier: begins from here, and has to be done on our own                                                                                                                   *
+                   \************************************************************************************************************************/
 
-//        //    Debug.Assert(response != null);
-//        //    Debug.Assert(HttpStatusCode.OK == response.StatusCode);
+                    Console.WriteLine("Please go to the https://connect.garmin.com/oauthConfirm?oauth_token={{oauth_token}}, and get verifier from URL.");
+                    Console.WriteLine("Copy its value and enter it in the string below.");
+                    Console.Write("Verifier : ");
+                    string inputString = Console.ReadLine();
+                    oauth_verifier = inputString;
+                    Console.WriteLine("Confirmed Verifier : " + oauth_verifier);
 
-//        //    var qs = System.Web.HttpUtility.ParseQueryString(response.Content);
-//        //    var requestToken = qs["oauth_token"];
-//        //    var oauthTokenSecret = qs["oauth_token_secret"];
+                    /************************************************************************************************************************\
+                     *  Step #3 - Access token: begins from here                                                                                                                   *
+                    \************************************************************************************************************************/
 
-//        //    Debug.Assert(requestToken != null);
-//        //    Debug.Assert(oauthTokenSecret != null);
+                    await AccessToken();
 
-//        //    return (requestToken, oauthTokenSecret);
-//        //}
+                }
+                else
+                {
+                    Console.WriteLine($"Error: {response.StatusCode} - {response.ReasonPhrase}");
+                }
+            }
 
-//        //public (string token, string tokenSecret) GetAccessToken(string requestToken, string requestTokenSecret, string verifier)
-//        //{
-//        //    Console.WriteLine("Acquiring User Access Token and Token Secret...");
-//        //    var oauthBaseUri = new Uri("https://connectapi.garmin.com/oauth-service/");
-//        //    var client = new RestClient(oauthBaseUri);
-//        //    client.Authenticator = OAuth1Authenticator.ForAccessToken(
-//        //        ConsumerKey,
-//        //        ConsumerSecret,
-//        //        requestToken,
-//        //        requestTokenSecret,
-//        //        verifier
-//        //    );
+            return "OK";
+        }
 
-//        //    var request = new RestRequest("oauth/access_token");
-//        //    var response = client.Execute(request);
+     /************************************************************************************************************************\
+     *                                                                                                                      *
+     \************************************************************************************************************************/
 
-//        //    Console.WriteLine($"Code: {response.StatusCode}, response: {response.Content}");
-//        //    Debug.Assert(response != null);
-//        //    Debug.Assert(HttpStatusCode.OK == response.StatusCode);
+        public async Task<string> AccessToken()
+        {
+            Console.WriteLine("testAccess::");
 
-//        //    var qs = HttpUtility.ParseQueryString(response.Content);
-//        //    var accessToken = qs["oauth_token"];
-//        //    var accessTokenSecret = qs["oauth_token_secret"];
+            using (var httpClient = new HttpClient())
+            {
+                // Generate the OAuth signature
+                var oauthSignature = GenerateAccessTokenSignature("POST", accessTokenUrl, ConsumerKey, ConsumerSecret, oauth_token, oauth_token_secret, oauth_verifier);
 
-//        //    Debug.Assert(accessToken != null);
-//        //    Debug.Assert(accessTokenSecret != null);
+                // Create the Authorization header for the Access Token request
+                var authorizationHeader = $"OAuth oauth_consumer_key=\"{ConsumerKey}\", oauth_token=\"{oauth_token}\", oauth_signature_method=\"HMAC-SHA1\", oauth_nonce=\"{GenerateNonce()}\", oauth_timestamp=\"{GenerateTimestamp()}\", oauth_version=\"1.0\", oauth_verifier=\"{oauth_verifier}\", oauth_signature=\"{Uri.EscapeDataString(oauthSignature)}\"";
 
-//        //    return (accessToken, accessTokenSecret);
-//        //}
+                // Make the OAuth request to obtain the User Access Token
+                using (var request = new HttpRequestMessage(HttpMethod.Post, accessTokenUrl))
+                {
+                    request.Headers.Add("Authorization", authorizationHeader);
 
-//        //***********************************************
-//        public (string token, string tokenSecret) AccessToken(string requestToken, string requestTokenSecret, string verifier)
-//        {
-//            Console.WriteLine("Acquiring User Access Token and Token Secret...");
-//            var oauthBaseUri = new Uri("https://connectapi.garmin.com/oauth-service/");
+                    // Send the request to obtain the User Access Token
+                    var response = await httpClient.SendAsync(request);
 
-//            try
-//            {
-//                client.BaseAddress = new Uri("https://connectapi.garmin.com/oauth-service/");
+                    // Handle the response as needed
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var responseContent = await response.Content.ReadAsStringAsync();
+                        Console.WriteLine($"Response: {responseContent}");
 
-//                client.DefaultRequestHeaders.Authorization =
-//                    new AuthenticationHeaderValue(ConsumerKey, "Consumer Key");
+                        // Parse the response content to extract User Access Token and Token Secret
+                        var tokenDictionary = ParseOAuthResponse(responseContent);
+                        if (tokenDictionary.TryGetValue("oauth_token", out string userAccessToken) &&
+                            tokenDictionary.TryGetValue("oauth_token_secret", out string userTokenSecret))
+                        {
+                            Console.WriteLine($"User Access Token: {userAccessToken}");
+                            Console.WriteLine($"User Token Secret: {userTokenSecret}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Error: *** access issues *** {response.StatusCode} - {response.ReasonPhrase}");
+                    }
+                }
+            }
 
-//                client.DefaultRequestHeaders.Authorization =
-//                    new AuthenticationHeaderValue(ConsumerSecret, "Consumer Secret");
+            return "Fail";
+        }
 
-//                client.DefaultRequestHeaders.Authorization =
-//                    new AuthenticationHeaderValue()
+        /************************************************************************************************************************\
+        *                                                                                                                      *
+        \************************************************************************************************************************/
+        public static string GenerateAccessTokenSignature(string httpMethod, string url, string consumerKey, string consumerSecret, string requestToken, string tokenSecret, string verifier)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                { "oauth_consumer_key", consumerKey },
+                { "oauth_token", requestToken },
+                { "oauth_signature_method", "HMAC-SHA1" },
+                { "oauth_nonce", GenerateNonce() },
+                { "oauth_timestamp", GenerateTimestamp() },
+                { "oauth_version", "1.0" },
+                { "oauth_verifier", verifier }
+            };
+
+            // Sort the parameters alphabetically
+            var sortedParameters = parameters.OrderBy(p => p.Key)
+                                            .ToDictionary(p => p.Key, p => p.Value);
+
+            // Concatenate parameters into normalized string
+            var parameterString = string.Join("&", sortedParameters.Select(p => $"{Uri.EscapeDataString(p.Key)}={Uri.EscapeDataString(p.Value)}"));
+
+            // Create the Signature Base String
+            var signatureBaseString = $"{httpMethod.ToUpper()}&{Uri.EscapeDataString(url)}&{Uri.EscapeDataString(parameterString)}";
+
+            // Generate the key used for signing
+            var key = $"{Uri.EscapeDataString(consumerSecret)}&{Uri.EscapeDataString(tokenSecret)}";
+
+            using (var hmacsha1 = new System.Security.Cryptography.HMACSHA1(Encoding.UTF8.GetBytes(key)))
+            {
+                var hashBytes = hmacsha1.ComputeHash(Encoding.UTF8.GetBytes(signatureBaseString));
+                return Convert.ToBase64String(hashBytes);
+            }
+
+        }
+
+        /************************************************************************************************************************\
+        *                                                                                                                      *
+        \************************************************************************************************************************/
+
+        public static string GenerateSignatureBaseString(string url, string httpMethod, Dictionary<string, string> parameters,  string tokenSecret = "")
+        {
+            // Add OAuth parameters to the request parameters
+            parameters.Add("oauth_consumer_key", ConsumerKey);
+            parameters.Add("oauth_signature_method", "HMAC-SHA1");
+            parameters.Add("oauth_nonce", GenerateNonce());
+            parameters.Add("oauth_timestamp", GenerateTimestamp());
+            parameters.Add("oauth_version", oauth_version);
+
+            // Sort the parameters alphabetically
+            var sortedParameters = parameters.OrderBy(p => p.Key)
+                                            .ToDictionary(p => p.Key, p => p.Value);
+
+            // Concatenate parameters into normalized string
+            var parameterString = string.Join("&", sortedParameters.Select(p => $"{Uri.EscapeDataString(p.Key)}={Uri.EscapeDataString(p.Value)}"));
+
+            // Create the Signature Base String
+            var signatureBaseString = $"{httpMethod.ToUpper()}&{Uri.EscapeDataString(url)}&{Uri.EscapeDataString(parameterString)}";
+
+            return signatureBaseString;
+        }
+
+        /************************************************************************************************************************\
+        *                                                                                                                      *
+        \************************************************************************************************************************/
 
 
-//                client.DefaultRequestHeaders.Accept.Add(
-//                    new MediaTypeWithQualityHeaderValue("application/json"));
+        public static string GenerateOAuthSignature(string signatureBaseString, string tokenSecret = "")
+        {
+            var key = $"{Uri.EscapeDataString(ConsumerSecret)}&{Uri.EscapeDataString(tokenSecret)}";
 
-//                return "OK", "OK";
-//            }
-//            catch (Exception ex)
-//            {
-//                string exceptionMessage = "SnipeITAuth->AuthLogin(): [" + ex.Message + "]";
-//                Console.WriteLine(exceptionMessage);
-//                return "FAIL|error", "f";
-//            }
+            using (var hmacsha1 = new HMACSHA1(Encoding.UTF8.GetBytes(key)))
+            {
+                var hashBytes = hmacsha1.ComputeHash(Encoding.UTF8.GetBytes(signatureBaseString));
+                return Convert.ToBase64String(hashBytes);
+            }
+        }
 
-//            //var client = new RestClient(oauthBaseUri);
-//            //client.Authenticator = OAuth1Authenticator.ForAccessToken(
-//            //    ConsumerKey,
-//            //    ConsumerSecret,
-//            //    requestToken,
-//            //    requestTokenSecret,
-//            //    verifier
-//            //);
+        /************************************************************************************************************************\
+        *                                                                                                                      *
+        \************************************************************************************************************************/
 
-//            //var request = new RestRequest("oauth/access_token");
-//            //var response = client.Execute(request);
+        private static string GenerateNonce()
+        {
+            return Guid.NewGuid().ToString("N");
+        }
 
-//            //Console.WriteLine($"Code: {response.StatusCode}, response: {response.Content}");
-//            //Debug.Assert(response != null);
-//            //Debug.Assert(HttpStatusCode.OK == response.StatusCode);
+        private static string GenerateTimestamp()
+        {
+            var epochStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var timestamp = Convert.ToInt64((DateTime.UtcNow - epochStart).TotalSeconds).ToString();
+            return timestamp;
+        }
 
-//            //var qs = HttpUtility.ParseQueryString(response.Content);
-//            //var accessToken = qs["oauth_token"];
-//            //var accessTokenSecret = qs["oauth_token_secret"];
+     /************************************************************************************************************************\
+     *                                                                                                                      *
+     \************************************************************************************************************************/
 
-//            //Debug.Assert(accessToken != null);
-//            //Debug.Assert(accessTokenSecret != null);
+        static Dictionary<string, string> ParseOAuthResponse(string responseString)
+        {
+            var tokenDictionary = new Dictionary<string, string>();
 
-//            //return (accessToken, accessTokenSecret);
-//        }
+            // Split the response string into key-value pairs
+            var keyValuePairs = responseString.Split('&');
 
-//        //public string GetUserId(string accessToken, string accessTokenSecret)
-//        //{
-//        //    Console.WriteLine("Getting User's Garmin Id...");
+            // Populate the dictionary with key-value pairs
+            foreach (var pair in keyValuePairs)
+            {
+                var parts = pair.Split('=');
+                if (parts.Length == 2)
+                {
+                    var key = parts[0];
+                    var value = parts[1];
+                    tokenDictionary[key] = value;
+                }
+            }
 
-//        //    var healthApiBaseUri = new Uri("https://healthapi.garmin.com/");
-//        //    var client = new RestClient(healthApiBaseUri);
-//        //    client.Authenticator = OAuth1Authenticator.ForProtectedResource(
-//        //       ConsumerKey,
-//        //    ConsumerSecret,
-//        //    accessToken,
-//        //       accessTokenSecret
-//        //   );
+            return tokenDictionary;
+        }
 
-//        //    var request = new RestRequest("wellness-api/rest/user/id", DataFormat.Json);
-//        //    var response = client.Execute(request);
-//        //    Debug.Assert(response != null);
-//        //    Debug.Assert(HttpStatusCode.OK == response.StatusCode);
 
-//        //    Console.WriteLine($"Code: {response.StatusCode}, response: {response.Content}");
+        /************************************************************************************************************************\
+         *                                                                                                                      *
+        \************************************************************************************************************************/     
 
-//        //    // TODO - Deserialize JSON response to a UserId model
-//        //    return response.Content;
-//        //}
-//    }
-//}
+        public Task<DataTable> GetProfile()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> SendSMS(string receiverNumber, string message)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> SendEmail(string adresantEmail, string adresantName, string subject, string body)
+        {
+            throw new NotImplementedException();
+        }
+
+        /************************************************************************************************************************\
+         *                                                                                                                      *
+        \************************************************************************************************************************/
+    }
+}
+
+
