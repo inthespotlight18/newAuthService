@@ -5,8 +5,12 @@ using System.Text;
 
 namespace AuthModelLib
 {
-    public class garminAuth : iGAuth
+    public class garminAuth1 : IgOauth1
     {
+        /************************************************************************************************************************\
+        *                                                                                                                      *
+        \************************************************************************************************************************/
+
         private const string ConsumerKey = "920a113f-b24b-4681-a3c2-fe16d940cb12";
         private const string ConsumerSecret = "VO4vvLXTmq4a6SCghWAMcwGYEwMY9dPvAp7";
         private const string SignatureMethod = "HMAC-SHA1";
@@ -24,8 +28,11 @@ namespace AuthModelLib
         //#2 step = https://connectapi.garmin.com/oauthConfirm  has to be done by user
         //#3 step = https://connectapi.garmin.com/oauth-service/oauth/access_token
 
+        /************************************************************************************************************************\
+        *                                     Code below is the implementation of interface                                                                                 *
+        \************************************************************************************************************************/
 
-        public async Task<string> AuthLogin()
+        public async Task<string> getRequestToken()
         {
             string requestUrl = "https://connectapi.garmin.com/oauth-service/oauth/request_token";
 
@@ -57,26 +64,8 @@ namespace AuthModelLib
                     if (tokenDictionary.TryGetValue("oauth_token", out string oauthToken))
                         oauth_token = oauthToken; //request_token
 
-                    if (tokenDictionary.TryGetValue("oauth_token_secret", out string oauthTokenSecret))                   
+                    if (tokenDictionary.TryGetValue("oauth_token_secret", out string oauthTokenSecret))
                         oauth_token_secret = oauthTokenSecret;
-
-                   /************************************************************************************************************************\
-                    *  Step #2 - Verifier: begins from here, and has to be done on our own                                                                                                                   *
-                   \************************************************************************************************************************/
-
-                    Console.WriteLine("Please go to the https://connect.garmin.com/oauthConfirm?oauth_token={{oauth_token}}, and get verifier from URL.");
-                    Console.WriteLine("Copy its value and enter it in the string below.");
-                    Console.Write("Verifier : ");
-                    string inputString = Console.ReadLine();
-                    oauth_verifier = inputString;
-                    Console.WriteLine("Confirmed Verifier : " + oauth_verifier);
-
-                    /************************************************************************************************************************\
-                     *  Step #3 - Access token: begins from here                                                                                                                   *
-                    \************************************************************************************************************************/
-
-                    await AccessToken();
-
                 }
                 else
                 {
@@ -87,11 +76,26 @@ namespace AuthModelLib
             return "OK";
         }
 
-     /************************************************************************************************************************\
-     *                                                                                                                      *
-     \************************************************************************************************************************/
+        /************************************************************************************************************************\
+        *                                                                                                                      *
+        \************************************************************************************************************************/
 
-        public async Task<string> AccessToken()
+        public string setVerifier()
+        {
+            Console.WriteLine("Please go to the https://connect.garmin.com/oauthConfirm?oauth_token={{oauth_token}}, and get verifier from URL.");
+            Console.WriteLine("Copy its value and enter it in the string below.");
+            Console.Write("Verifier : ");
+            string inputString = Console.ReadLine();
+            oauth_verifier = inputString;
+            Console.WriteLine("Confirmed Verifier : " + oauth_verifier);
+            return "OK";
+        }
+
+        /************************************************************************************************************************\
+        *                                                                                                                      *
+        \************************************************************************************************************************/
+
+        public async Task<string> getAccessToken()
         {
             Console.WriteLine("testAccess::");
 
@@ -137,8 +141,9 @@ namespace AuthModelLib
         }
 
         /************************************************************************************************************************\
-        *                                                                                                                      *
+        *                              Code below parses and generates authorization parameters needed for code above                                                                                       *
         \************************************************************************************************************************/
+
         public static string GenerateAccessTokenSignature(string httpMethod, string url, string consumerKey, string consumerSecret, string requestToken, string tokenSecret, string verifier)
         {
             var parameters = new Dictionary<string, string>
@@ -231,9 +236,9 @@ namespace AuthModelLib
             return timestamp;
         }
 
-     /************************************************************************************************************************\
-     *                                                                                                                      *
-     \************************************************************************************************************************/
+       /************************************************************************************************************************\
+       *                                                                                                                      *
+       \************************************************************************************************************************/
 
         static Dictionary<string, string> ParseOAuthResponse(string responseString)
         {
@@ -260,7 +265,7 @@ namespace AuthModelLib
 
         /************************************************************************************************************************\
          *                                                                                                                      *
-        \************************************************************************************************************************/     
+        \************************************************************************************************************************   
 
         public Task<DataTable> GetProfile()
         {
@@ -273,16 +278,6 @@ namespace AuthModelLib
         }
 
         public Task<string> SendEmail(string adresantEmail, string adresantName, string subject, string body)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<string> AuthLogout()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<string> Refresh()
         {
             throw new NotImplementedException();
         }

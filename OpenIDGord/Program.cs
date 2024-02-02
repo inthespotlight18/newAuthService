@@ -35,12 +35,16 @@ namespace openIDGord
             */
 
 
-            var garminAuth = new garminAuth();
-            await garminAuth.AuthLogin();
+            //var garminAuth = new garminAuth();
+            //await garminAuth.AuthLogin();
+
+            var zoomAuth = new zoomAuth();
+            await zoomAuth.AuthLogin();
 
 
-
-
+            var GS_ciraAuth = new GS_ciraAuth();
+            await GS_ciraAuth.AuthLogin();
+            await GS_ciraAuth.Refresh();
 
 
             //await googleAuth.SendEmail("dzlenko0922@gmail.com", "Daniil Zlenko", "C# TEST", "Hello from DZ program");

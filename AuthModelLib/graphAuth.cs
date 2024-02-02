@@ -103,6 +103,16 @@ public class graphAuth : iGAuth
         return "This functionality is not implemented in GraphAuth class";
     }
 
+    public Task<string> AuthLogout()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<string> Refresh()
+    {
+        throw new NotImplementedException();
+    }
+
     /************************************************************************************************************************\
     *                                                                                                                      *
     \************************************************************************************************************************/

@@ -108,6 +108,16 @@ namespace AuthModelLib
             return "This functionality is not implemented in HapnAuth class";
         }
 
+        public Task<string> AuthLogout()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> Refresh()
+        {
+            throw new NotImplementedException();
+        }
+
         /************************************************************************************************************************\
         *                                                                                                                      *
        \************************************************************************************************************************/

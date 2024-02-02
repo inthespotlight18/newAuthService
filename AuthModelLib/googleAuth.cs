@@ -207,11 +207,21 @@ namespace AuthModelLib
             return "googleAuth-> ServiceTest";
         }
 
+        public Task<string> AuthLogout()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> Refresh()
+        {
+            throw new NotImplementedException();
+        }
+
         /************************************************************************************************************************\
          *                                                                                                                      *
         \************************************************************************************************************************/
 
-        
+
 
     }
 }
