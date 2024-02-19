@@ -167,9 +167,9 @@ namespace AuthModelLib
 
               
 
-        public Task<DataTable> GetProfile()
+        public async Task<DataTable> GetProfile()
         {
-            throw new NotImplementedException();
+            return await Task.FromResult( new DataTable(string.Format("This functionality is not implemented yet in current class")));
         }
 
         public Task<string> SendSMS(string receiverNumber, string message)
